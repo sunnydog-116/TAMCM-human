@@ -65,18 +65,11 @@ For a different CUDA version, install the matching PyTorch build and keep the sa
 
 PyTorch3D should be installed separately because its binary compatibility depends on the active Python, PyTorch, CUDA, and compiler versions. Use a prebuilt wheel when available, or build it from source inside the same Conda environment.
 
-Verify the installation:
-
-```powershell
-python -c "import torch; import pytorch3d; print(torch.__version__); print(torch.cuda.is_available())"
-```
-
 ### 4. Install Project Dependencies
 
 Install the pinned Python dependencies from the repository root:
 
 ```powershell
-cd "<path-to-this-project>"
 pip install -r requirement.txt
 ```
 
