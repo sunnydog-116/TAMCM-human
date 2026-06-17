@@ -2,26 +2,27 @@
 
 `volumetric_bodyfit` is a volumetric human body fitting toolkit. It loads scan meshes or preprocessed voxel data, predicts displacement fields for body-template vertices, and can run body model fitting, Chamfer refinement, surface-offset refinement, correspondence transfer, and evaluation reports.
 
-This repository contains the refactored source code, lightweight runtime profiles, and small resource files. Large checkpoints and body model artifacts are intentionally kept outside this tree and mounted through environment variables.
+This repository contains the refactored source code, lightweight runtime profiles, and small resource files. Large checkpoints, licensed body-model assets, and dataset artifacts are intentionally kept outside this tree and mounted through environment variables.
 
 ## Project Layout
 
 ```text
 .
-├── src/volumetric_bodyfit/
-│   ├── config/          # Runtime paths and environment variable handling
-│   ├── dataflow/        # Dataset and Lightning DataModule code
-│   ├── fieldnets/       # Voxel encoders and point-query networks
-│   ├── solver/          # Training system, geometry utilities, and fitting logic
-│   ├── entrypoints/     # Batch, CAPE, 4D-DRESS, and interactive entrypoints
-│   ├── reports/         # Error reports and correspondence evaluation
-│   └── resources/       # Pair lists and body vertex groups
-├── profiles/            # Inference and evaluation runtime profiles
-├── model_profiles/      # Model configuration profiles, without large checkpoints
-├── artifact_manifest.csv
-├── install.sh
-├── setup.cfg
-└── surface_asset_export.py
+|-- src/volumetric_bodyfit/
+|   |-- config/          # Runtime paths and environment variable handling
+|   |-- dataflow/        # Dataset and Lightning DataModule code
+|   |-- fieldnets/       # Voxel encoders and point-query networks
+|   |-- solver/          # Training system, geometry utilities, and fitting logic
+|   |-- entrypoints/     # Batch, CAPE, 4D-DRESS, and interactive entrypoints
+|   |-- reports/         # Error reports and correspondence evaluation
+|   `-- resources/       # Pair lists and body vertex groups
+|-- profiles/            # Inference and evaluation runtime profiles
+|-- model_profiles/      # Model configuration profiles, without large checkpoints
+|-- artifact_manifest.csv
+|-- install.sh
+|-- requirement.txt
+|-- setup.cfg
+`-- surface_asset_export.py
 ```
 
 ## Artifact Layout
@@ -30,19 +31,85 @@ Large files are not stored in this refactored source tree. At runtime, the code 
 
 ```text
 <artifact-root>/
-├── storage/             # Checkpoint folders
-└── support_data/        # Body models and support files
+|-- storage/             # Checkpoint folders
+`-- support_data/        # Body models and support files
 ```
 
 `artifact_manifest.csv` lists the large files that were left outside the refactored tree. The artifact names in that manifest are anonymized and are only meant to preserve count and size information.
 
-## Environment Variables
+## Environment Setup
 
-Required:
+The project is designed for a reproducible research environment with Python 3.8, CUDA-enabled PyTorch, mesh-processing libraries, and external human body-model assets. A GPU environment is strongly recommended for inference and large-scale evaluation, and is generally required for training.
+
+### 1. Create a Conda Environment
+
+```powershell
+conda create -n bodyfit python=3.8.13 -y
+conda activate bodyfit
+python -m pip install --upgrade pip setuptools wheel
+```
+
+Python 3.8 is recommended because several geometry-processing and human-body-model dependencies have stricter compatibility requirements than ordinary scientific Python packages.
+
+### 2. Install the CUDA PyTorch Stack
+
+Install PyTorch with the CUDA runtime that matches the target workstation. For CUDA 11.8:
+
+```powershell
+conda install -y pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
+```
+
+For a different CUDA version, install the matching PyTorch build and keep the same version alignment when installing PyTorch3D.
+
+### 3. Install PyTorch3D
+
+PyTorch3D should be installed separately because its binary compatibility depends on the active Python, PyTorch, CUDA, and compiler versions. Use a prebuilt wheel when available, or build it from source inside the same Conda environment.
+
+Verify the installation:
+
+```powershell
+python -c "import torch; import pytorch3d; print(torch.__version__); print(torch.cuda.is_available())"
+```
+
+### 4. Install Project Dependencies
+
+Install the pinned Python dependencies from the repository root:
+
+```powershell
+cd "<path-to-this-project>"
+pip install -r requirement.txt
+```
+
+The final line of `requirement.txt` installs the local package in editable mode with `pip install -e .`, which is convenient for research workflows where source files may be modified during experimentation.
+
+### 5. Install External Research Dependencies
+
+The following components are intentionally not vendored in this repository and should be installed from approved source trees, institutional mirrors, or official releases:
+
+- `human_body_prior` or an interface-compatible body-prior package
+- voxel preprocessing extensions used to transform meshes into volumetric tensors
+- body-model fitting utilities compatible with the runtime interfaces
+- licensed SMPL/SMPL-X or related body-model files, if required by the selected profile
+
+These dependencies often have independent academic or dataset-specific licenses. Keep them outside the Git repository and expose them through environment variables.
+
+### 6. Configure Runtime Paths
+
+At minimum, define the project root and artifact root:
 
 ```powershell
 $env:BODYFIT_PROJECT_HOME = "<path-to-this-project>"
 $env:BODYFIT_ARTIFACT_ROOT = "<path-containing-storage-and-support_data>"
+```
+
+The artifact root should contain:
+
+```text
+<artifact-root>/
+|-- storage/
+|   `-- <checkpoint-name>/checkpoints/
+`-- support_data/
+    `-- <body-model-and-support-files>
 ```
 
 Common optional overrides:
@@ -68,22 +135,27 @@ $env:BODYFIT_FAUST_SCAN_DIR = "<faust-scan-folder>"
 $env:BODYFIT_FAUST_REGISTRATION_DIR = "<faust-registration-folder>"
 ```
 
-## Installation
+### 7. Validate the Installation
 
-Python 3.8 and a CUDA-compatible PyTorch environment are recommended. See `install.sh` for pinned dependency versions.
+Run a syntax check from the repository root:
 
 ```powershell
-cd "<path-to-this-project>"
-pip install -e .
+python -m compileall -q .
 ```
 
-Full training or inference also requires these external components:
+Verify that the package imports:
 
-- PyTorch3D
-- `human_body_prior`
-- voxel preprocessing extensions
-- body model fitting utilities compatible with the project interfaces
-- a working CUDA runtime
+```powershell
+python -c "import volumetric_bodyfit; print(volumetric_bodyfit.__name__)"
+```
+
+For a GPU-capable environment, also check CUDA availability:
+
+```powershell
+python -c "import torch; print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU only')"
+```
+
+If import errors occur, first check PyTorch/PyTorch3D compatibility, then confirm that external body-model and voxel-processing packages are installed in the active Conda environment.
 
 ## Main Entrypoints
 
