@@ -37,6 +37,30 @@ Large files are not stored in this refactored source tree. At runtime, the code 
 
 `artifact_manifest.csv` lists the large files that were left outside the refactored tree. The artifact names in that manifest are anonymized and are only meant to preserve count and size information.
 
+## Checkpoint
+
+A checkpoint is provided as an external release asset rather than a Git-tracked file, because checkpoint binaries are large and should remain separate from the source tree.
+
+- File name: `checkpoint.ckpt`
+- Download: [checkpoint.ckpt](https://github.com/sunnydog-116/TAMCM-human/releases/download/v1.0/checkpoint.ckpt)
+
+After downloading the checkpoint, place it under the artifact root, for example:
+
+```text
+<artifact-root>/
+`-- storage/
+    `-- pretrained_bodyfit/
+        `-- checkpoints/
+            `-- checkpoint.ckpt
+```
+
+Then configure the runtime path with:
+
+```powershell
+$env:BODYFIT_ARTIFACT_ROOT = "<path-containing-storage-and-support_data>"
+$env:BODYFIT_CHECKPOINT_DIR = "<artifact-root>/storage"
+```
+
 ## Environment Setup
 
 The project is designed for a reproducible research environment with Python 3.8, CUDA-enabled PyTorch, mesh-processing libraries, and external human body-model assets. A GPU environment is strongly recommended for inference and large-scale evaluation, and is generally required for training.
@@ -65,11 +89,18 @@ For a different CUDA version, install the matching PyTorch build and keep the sa
 
 PyTorch3D should be installed separately because its binary compatibility depends on the active Python, PyTorch, CUDA, and compiler versions. Use a prebuilt wheel when available, or build it from source inside the same Conda environment.
 
+Verify the installation:
+
+```powershell
+python -c "import torch; import pytorch3d; print(torch.__version__); print(torch.cuda.is_available())"
+```
+
 ### 4. Install Project Dependencies
 
 Install the pinned Python dependencies from the repository root:
 
 ```powershell
+cd "<path-to-this-project>"
 pip install -r requirement.txt
 ```
 
