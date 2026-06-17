@@ -1,0 +1,61 @@
+# Python bytecode and build outputs
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Local environment and editor state
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Runtime outputs and experiment logs
+outputs/
+output/
+logs/
+wandb/
+lightning_logs/
+streamlitTempDir/
+training_tmp/
+
+# Large model, checkpoint, and dataset artifacts
+*.ckpt
+*.pt
+*.pth
+*.onnx
+*.npz
+*.pkl
+*.pickle
+*.zip
+*.tar
+*.tar.gz
+*.7z
+storage/
+data/
+datasets/
+datafolder/
+
+# Generated geometry and visualizations
+*.ply
+*.obj
+*.stl
+*.off
+*.glb
+*.gltf
+
+# OS metadata
+.DS_Store
+Thumbs.db
